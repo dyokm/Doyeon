@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스쿨밀 (SchoolMeal) - 강남 학원가 무한 음식점 커스텀 추천기</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #f5f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            color: #ff5e36;
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .step-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .input-group select, 
+        .input-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #e1e4e8;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group select:focus, 
+        .input-group input:focus {
+            border-color: #ff5e36;
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            background-color: #ff5e36;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 5px;
+        }
+
+        .btn-main:hover {
+            background-color: #e04822;
+        }
+
+        /* 신규 음식점 직접 추가 토글 섹션 */
+        .add-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+        }
+
+        .add-toggle-btn {
+            background: none;
+            border: none;
+            color: #ff5e36;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .add-form {
+            display: none;
+            margin-top: 10px;
+            background: #f9f9fb;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+
+        .add-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn-add {
+            width: 100%;
+            padding: 8px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* 결과 화면 디자인 */
+        .result-card {
+            display: none;
+            background: #fff8f6;
+            border: 2px dashed #ff5e36;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card h2 {
+            color: #222;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .result-location {
+            font-size: 13px;
+            color: #ff5e36;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .result-badge {
+            display: inline-block;
+            background: #ff5e36;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .result-info {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .dutch-pay-box {
+            background: #ffffff;
+            border: 1px solid #ffe2db;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #ff5e36;
+            font-weight: 600;
+        }
+
+        .roulette-anim {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff5e36;
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .btn-sub {
+            width: 100%;
+            padding: 10px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🍱 스쿨밀 (SchoolMeal)</h1>
+        <p>대치·삼성·청담 무한 커스텀 메뉴 결정기</p>
+    </header>
+
+    <div class="step-container" id="form-container">
+        <!-- STEP 1: 지역 선택 -->
+        <div class="input-group">
+            <label for="location">📍 위치 선택</label>
+            <select id="location">
+                <option value="all">강남 3개 동 전체 (대치/삼성/청담)</option>
+                <option value="대치동">대치동 학원가</option>
+                <option value="삼성동">삼성동 주변</option>
+                <option value="청담동">청담동 주변</option>
+            </select>
+        </div>
+
+        <!-- STEP 2: 시간 선택 -->
+        <div class="input-group">
+            <label for="time">⏱️ 학원 수업까지 남은 시간</label>
+            <select id="time">
+                <option value="15">15분 이하 (편의점/간편식)</option>
+                <option value="30" selected>30분 이하 (분식/패스트푸드)</option>
+                <option value="60">1시간 이하 (여유로운 식사)</option>
+            </select>
+        </div>
+
+        <!-- STEP 3: 예산 선택 -->
+        <div class="input-group">
+            <label for="budget">💰 1인당 최대 예산</label>
+            <select id="budget">
+                <option value="6000">6,000원 이하</option>
+                <option value="10000" selected>10,000원 이하</option>
+                <option value="15000">15,000원 이하</option>
+                <option value="30000">30,000원 이하 (고급 식당/파인다이닝)</option>
+            </select>
+        </div>
+
+        <!-- STEP 4: 메뉴 카테고리 -->
+        <div class="input-group">
+            <label for="category">🍕 선호 메뉴 종류</label>
+            <select id="category">
+                <option value="all">상관없음 (전체 보기)</option>
+                <option value="분식">분식 (떡볶이, 김밥 등)</option>
+                <option value="패스트푸드">패스트푸드 (버거, 피자, 치킨)</option>
+                <option value="한식/밥류">한식/밥류 (보쌈, 덮밥, 백반, 도시락)</option>
+                <option value="일식/세계요리">일식/세계요리 (돈까스, 라멘, 마라탕, 딤섬)</option>
+                <option value="간편식/디저트">간편식/디저트 (토스트, 샌드위치, 샐러드)</option>
+                <option value="편의점">편의점</option>
+            </select>
+        </div>
+
+        <!-- STEP 5: 인원 수 -->
+        <div class="input-group">
+            <label for="people">👥 함께 먹는 인원 수</label>
+            <input type="number" id="people" value="3" min="1" max="10">
+        </div>
+
+        <button class="btn-main" onclick="startRoulette()">🎲 강남 학원가 메뉴 결정하기!</button>
+
+        <!-- 음식점 직접 추가 기능 (무한 확장 영역) -->
+        <div class="add-section">
+            <button class="add-toggle-btn" onclick="toggleAddForm()">➕ 원하는 음식점 직접 추가하기 (클릭)</button>
+            <div class="add-form" id="add-form">
+                <div class="add-form-grid">
+                    <input type="text" id="new-name" placeholder="음식점 이름 (예: 정식당)">
+                    <select id="new-loc">
+                        <option value="대치동">대치동</option>
+                        <option value="삼성동">삼성동</option>
+                        <option value="청담동">청담동</option>
+                    </select>
+                    <select id="new-cat">
+                        <option value="분식">분식</option>
+                        <option value="패스트푸드">패스트푸드</option>
+                        <option value="한식/밥류">한식/밥류</option>
+                        <option value="일식/세계요리">일식/세계요리</option>
+                        <option value="간편식/디저트">간편식/디저트</option>
+                        <option value="편의점">편의점</option>
+                    </select>
+                    <input type="number" id="new-price" placeholder="대표 가격(원) 예: 8000">
+                    <input type="text" id="new-menu" placeholder="대표 메뉴명">
+                    <input type="number" id="new-time" placeholder="소요시간(분) 예: 15">
+                </div>
+                <button class="btn-add" onclick="addNewRestaurant()">데이터베이스에 저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 애니메이션 로딩 영역 -->
+    <div class="roulette-anim" id="roulette-anim">
+        🎰 조건에 맞는 식당 검색 중... <br>
+        <span id="roulette-text" style="font-size: 20px; color: #333;">???</span>
+    </div>
+
+    <!-- STEP 6: 결과 카드 -->
+    <div class="result-card" id="result-card">
+        <span class="result-badge" id="res-badge">추천 완료</span>
+        <div class="result-location" id="res-location">📍 위치</div>
+        <h2 id="res-name">식당 이름</h2>
+        <div class="result-info">
+            <p><strong>대표 메뉴:</strong> <span id="res-menu">메뉴</span></p>
+            <p><strong>예상 소요 시간:</strong> <span id="res-time">0분</span> (이동+조리)</p>
+            <p><strong>1인 예상 금액:</strong> <span id="res-price">0원</span></p>
+        </div>
+        
+        <div class="dutch-pay-box" id="dutch-box">
+            💡 총 N명 기준 계산
+        </div>
+
+        <button class="btn-main" style="margin-top: 15px;" onclick="copyResult()">📋 단톡방 공유용 문구 복사</button>
+        <button class="btn-sub" onclick="resetForm()">🔄 다시 설정하기</button>
+    </div>
+</div>
+
+<script>
+    // 기본 데이터베이스 (대치동, 삼성동, 청담동 유명 식당 40종 배치)
+    let restaurantData = [
+        // 대치동
+        { name: "은마상가 만나분식", location: "대치동", category: "분식", menu: "떡볶이 + 튀김 세트", price: 6500, time: 15 },
+        { name: "바르다김선생 대치점", location: "대치동", category: "분식", menu: "바른 김밥 + 라면", price: 8500, time: 15 },
+        { name: "싸움의고수 대치점", location: "대치동", category: "한식/밥류", menu: "1인 보쌈 M", price: 8900, time: 10 },
+        { name: "킹스덮밥 대치점", location: "대치동", category: "한식/밥류", menu: "불고기 덮밥", price: 9500, time: 15 },
+        { name: "한솥도시락 대치학원가점", location: "대치동", category: "한식/밥류", menu: "빅치킨마요", price: 5200, time: 10 },
+        { name: "맘스터치 대치학원가점", location: "대치동", category: "패스트푸드", menu: "싸이버거 세트", price: 6900, time: 15 },
+        { name: "피자스쿨 대치점", location: "대치동", category: "패스트푸드", menu: "고구마피자", price: 6000, time: 15 },
+        { name: "홍콩반점0410 한티역점", location: "대치동", category: "일식/세계요리", menu: "짜장면 + 군만두", price: 7500, time: 15 },
+        { name: "키와미라멘 대치점", location: "대치동", category: "일식/세계요리", menu: "믹스동 / 톤코츠 라멘", price: 9500, time: 20 },
+        { name: "탕화쿵푸마라탕 대치점", location: "대치동", category: "일식/세계요리", menu: "마라탕", price: 9000, time: 20 },
+        { name: "미소야 대치점", location: "대치동", category: "일식/세계요리", menu: "로스카츠 정식", price: 11500, time: 25 },
+        { name: "이삭토스트 대치은마점", location: "대치동", category: "간편식/디저트", menu: "햄스페셜 토스트", price: 4100, time: 10 },
+        { name: "봉구스밥버거 대치점", location: "대치동", category: "간편식/디저트", menu: "햄치즈 밥버거", price: 4500, time: 5 },
+        { name: "CU 대치은마점", location: "대치동", category: "편의점", menu: "도시락 + 음료", price: 5500, time: 5 },
+        { name: "GS25 대치학원가점", location: "대치동", category: "편의점", menu: "혜자로운 집밥", price: 5800, time: 5 },
+
+        // 삼성동
+        { name: "싸다김밥 삼성중앙역점", location: "삼성동", category: "분식", menu: "국물떡볶이 + 참치김밥", price: 8500, time: 15 },
+        { name: "맥도날드 삼성역점", location: "삼성동", category: "패스트푸드", menu: "빅맥 런치세트", price: 6500, time: 10 },
+        { name: "노브랜드버거 삼성역점", location: "삼성동", category: "패스트푸드", menu: "NBB 시그니처 세트", price: 6300, time: 10 },
+        { name: "지구당 코엑스점", location: "삼성동", category: "한식/밥류", menu: "규동 (소고기덮밥)", price: 8500, time: 20 },
+        { name: "팀호완 삼성점", location: "삼성동", category: "일식/세계요리", menu: "샤오마이 + 하가우", price: 15000, time: 25 },
+        { name: "크라이치즈버거 삼성역점", location: "삼성동", category: "패스트푸드", menu: "더블치즈버거 세트", price: 8900, time: 15 },
+        { name: "중앙해장 삼성동", location: "삼성동", category: "한식/밥류", menu: "양선지해장국", price: 14000, time: 20 },
+        { name: "탄탄면공방 파르나스몰점", location: "삼성동", category: "일식/세계요리", menu: "기본 탄탄면", price: 10800, time: 15 },
+        { name: "정일면 삼성점", location: "삼성동", category: "일식/세계요리", menu: "마제소바", price: 11000, time: 20 },
+        { name: "홍대개미 삼성점", location: "삼성동", category: "일식/세계요리", menu: "스테이크 덮밥", price: 11900, time: 25 },
+        { name: "SUBWAY 삼성중앙역점", location: "삼성동", category: "간편식/디저트", menu: "이탈리안 비엠티", price: 7900, time: 10 },
+        { name: "GS25 삼성중앙점", location: "삼성동", category: "편의점", menu: "도시락 + 삼각김밥", price: 5200, time: 5 },
+
+        // 청담동
+        { name: "청담동 마녀김밥 본점", location: "청담동", category: "분식", menu: "마녀김밥 + 마녀떡볶이", price: 9500, time: 15 },
+        { name: "KFC 청담역점", location: "청담동", category: "패스트푸드", menu: "징거버거 세트", price: 7800, time: 15 },
+        { name: "청담골", location: "청담동", category: "한식/밥류", menu: "가정식 백반 정식", price: 10000, time: 15 },
+        { name: "순남시래기 청담점", location: "청담동", category: "한식/밥류", menu: "3대 시래기국", price: 10000, time: 20 },
+        { name: "질할브로스 청담점", location: "청담동", category: "일식/세계요리", menu: "치킨 오버 라이스", price: 9800, time: 15 },
+        { name: "카츠바이콘반 청담", location: "청담동", category: "일식/세계요리", menu: "로스카츠 정식", price: 15000, time: 30 },
+        { name: "SUBWAY 청담역점", location: "청담동", category: "간편식/디저트", menu: "에그마요 15cm 세트", price: 7500, time: 10 },
+        { name: "에그드랍 청담점", location: "청담동", category: "간편식/디저트", menu: "미스터 에그", price: 6500, time: 10 },
+        { name: "정식당 청담", location: "청담동", category: "한식/밥류", menu: "런치 파인다이닝 코스", price: 30000, time: 60 },
+        { name: "노티드 청담점", location: "청담동", category: "간편식/디저트", menu: "우유생크림 도넛 + 커피", price: 8000, time: 10 },
+        { name: "세븐일레븐 청담학원가점", location: "청담동", category: "편의점", menu: "삼각김밥 + 컵라면", price: 4200, time: 5 }
+    ];
+
+    function toggleAddForm() {
+        const form = document.getElementById('add-form');
+        form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function addNewRestaurant() {
+        const name = document.getElementById('new-name').value.trim();
+        const loc = document.getElementById('new-loc').value;
+        const cat = document.getElementById('new-cat').value;
+        const price = parseInt(document.getElementById('new-price').value);
+        const menu = document.getElementById('new-menu').value.trim();
+        const time = parseInt(document.getElementById('new-time').value);
+
+        if(!name || isNaN(price) || !menu || isNaN(time)) {
+            alert("모든 입력 칸을 바르게 입력해 주세요!");
+            return;
+        }
+
+        restaurantData.push({ name, location: loc, category: cat, menu, price, time });
+        alert(`'${name}' 매장이 성공적으로 데이터베이스에 등록되었습니다!`);
+        
+        // 입력 칸 초기화
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-price').value = '';
+        document.getElementById('new-menu').value = '';
+        document.getElementById('new-time').value = '';
+        toggleAddForm();
+    }
+
+    function startRoulette() {
+        const selectedLocation = document.getElementById('location').value;
+        const timeLimit = parseInt(document.getElementById('time').value);
+        const budgetLimit = parseInt(document.getElementById('budget').value);
+        const selectedCategory = document.getElementById('category').value;
+        const peopleCount = parseInt(document.getElementById('people').value);
+
+        // 조건 필터링
+        const filtered = restaurantData.filter(item => {
+            const locationOk = (selectedLocation === 'all') || (item.location === selectedLocation);
+            const timeOk = item.time <= timeLimit;
+            const budgetOk = item.price <= budgetLimit;
+            const categoryOk = (selectedCategory === 'all') || (item.category === selectedCategory);
+            return locationOk && timeOk && budgetOk && categoryOk;
+        });
+
+        if (filtered.length === 0) {
+            alert("선택하신 조건에 맞는 식당이 없습니다. 예산을 늘리거나 하단 버튼으로 새 음식점을 추가해 보세요!");
+            return;
+        }
+
+        // 애니메이션 효과
+        document.getElementById('form-container').style.display = 'none';
+        const animBox = document.getElementById('roulette-anim');
+        const animText = document.getElementById('roulette-text');
+        animBox.style.display = 'block';
+
+        let counter = 0;
+        const interval = setInterval(() => {
+            const randomTemp = filtered[Math.floor(Math.random() * filtered.length)];
+            animText.innerText = `[${randomTemp.location}] ${randomTemp.name}`;
+            counter++;
+            if (counter > 15) {
+                clearInterval(interval);
+                animBox.style.display = 'none';
+                showResult(filtered[Math.floor(Math.random() * filtered.length)], peopleCount);
+            }
+        }, 100);
+    }
+
+    function showResult(item, people) {
+        document.getElementById('result-card').style.display = 'block';
+        
+        document.getElementById('res-badge').innerText = `[${item.category}] 타임어택 추천!`;
+        document.getElementById('res-location').innerText = `📍 강남구 ${item.location}`;
+        document.getElementById('res-name').innerText = item.name;
+        document.getElementById('res-menu').innerText = item.menu;
+        document.getElementById('res-time').innerText = `${item.time}분 컷`;
+        document.getElementById('res-price').innerText = `${item.price.toLocaleString()}원`;
+
+        const totalPrice = item.price * people;
+        document.getElementById('dutch-box').innerText = 
+            `💡 총 ${people}명 식사시 전체 약 ${totalPrice.toLocaleString()}원 (1인당 ${item.price.toLocaleString()}원)`;
+    }
+
+    function copyResult() {
+        const location = document.getElementById('res-location').innerText;
+        const name = document.getElementById('res-name').innerText;
+        const menu = document.getElementById('res-menu').innerText;
+        const price = document.getElementById('res-price').innerText;
+        const dutch = document.getElementById('dutch-box').innerText;
+
+        const textToCopy = `[스쿨밀 강남 학원가 추천 카드]\n${location}\n📍 식당: ${name}\n🍱 추천메뉴: ${menu}\n💰 1인 예산: ${price}\n\n${dutch}\n\n학원 수업에 늦지 않게 모이자!`;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert("단톡방 공유용 문구가 복사되었습니다!");
+        });
+    }
+
+    function resetForm() {
+        document.getElementById('result-card').style.display = 'none';
+        document.getElementById('form-container').style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>
